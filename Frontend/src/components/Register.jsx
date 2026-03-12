@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { useForm } from "react-hook-form";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 40 },
@@ -15,103 +16,104 @@ const fadeUp = {
 
 export default function Register() {
 
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    password: "",
-    otp: ""
-  });
+  const { register, handleSubmit, watch, formState: { errors } } = useForm();
 
-  const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
+
+  const [otpSent, setOtpSent] = useState(false);
   const [otpVerified, setOtpVerified] = useState(false);
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const [registering, setRegistering] = useState(false);
 
-  // VALIDATION
-  const validate = () => {
-    let newErrors = {};
-
-    if (!form.name) newErrors.name = "Name is required";
-    if (!form.email) newErrors.email = "Email is required";
-    if (!form.password) newErrors.password = "Password is required";
-    if (form.password && form.password.length < 8)
-      newErrors.password = "Password must be at least 8 characters";
-    if (!form.otp) newErrors.otp = "OTP is required";
-
-    setErrors(newErrors);
-
-    return Object.keys(newErrors).length === 0;
-  };
+  const email = watch("email");
+  const otp = watch("otp");
 
   // SEND OTP
   const sendOTP = async () => {
 
-    if (!form.email) {
-      return toast.error("Enter email first");
-    }
-    if(!form.email.endsWith("@gmail.com")){
-      return toast.error("gmail should be end with @gmail.com");
+    if (!email) return toast.error("Enter email first");
+
+    if (!email.endsWith("@gmail.com")) {
+      return toast.error("Email must end with @gmail.com");
     }
 
     try {
-      await axios.post("http://localhost:3000/send-otp", {
-        email: form.email
-      });
 
-      toast.success("OTP sent to email");
+      setSendingOtp(true);
 
-    } catch (error) {
+      await axios.post("http://localhost:3000/send-otp", { email });
+
+      setOtpSent(true);
+      toast.success("OTP sent");
+
+    } catch {
+
       toast.error("Failed to send OTP");
+
+    } finally {
+
+      setSendingOtp(false);
+
     }
   };
 
   // VERIFY OTP
   const verifyOTP = async () => {
 
-    if (!form.otp) {
-      return toast.error("Enter OTP");
-    }
+    if (!otp) return toast.error("Enter OTP");
+
+    if (otp.length !== 6) return toast.error("OTP must be 6 digits");
 
     try {
 
+      setVerifyingOtp(true);
+
       const res = await axios.post("http://localhost:3000/verify-otp", {
-        email: form.email,
-        otp: form.otp
+        email,
+        otp
       });
 
       if (res.data.success) {
         setOtpVerified(true);
-        toast.success("OTP Verified");
-      } else {
-        toast.error("Invalid OTP");
+        toast.success("OTP verified");
       }
 
     } catch (error) {
-      toast.error("OTP verification failed");
+
+      toast.error(error.response?.data?.message || "OTP failed");
+
+    } finally {
+
+      setVerifyingOtp(false);
+
     }
   };
 
   // REGISTER
-  const registerUser = async (e) => {
-    e.preventDefault();
-
-    if (!validate()) return;
+  const registerUser = async (data) => {
 
     if (!otpVerified) {
-      return toast.error("Please verify OTP first");
+      return toast.error("Verify OTP first");
     }
 
     try {
 
-      const res = await axios.post("http://localhost:3000/register", form);
+      setRegistering(true);
+
+      const res = await axios.post("http://localhost:3000/register", data);
 
       toast.success(res.data.message);
 
     } catch (error) {
-      toast.error("Registration failed");
+
+      toast.error(error.response?.data?.message || "Registration failed");
+
+    } finally {
+
+      setRegistering(false);
+
     }
   };
 
@@ -139,63 +141,74 @@ export default function Register() {
           Create Your Account
         </h2>
 
-        <form className="space-y-4" onSubmit={registerUser}>
+        <form className="space-y-4" onSubmit={handleSubmit(registerUser)}>
 
           {/* NAME */}
           <input
-            type="text"
-            name="name"
+            {...register("name", { required: "Name is required" })}
             placeholder="Full name"
-            onChange={handleChange}
             className="w-full px-4 py-3 rounded-lg bg-black/40"
           />
-          {errors.name && <p className="text-red-400 text-sm">{errors.name}</p>}
+          {errors.name && <p className="text-red-400">{errors.name.message}</p>}
 
           {/* EMAIL */}
           <input
-            type="email"
-            name="email"
+            {...register("email", { required: "Email is required" })}
             placeholder="Email"
-            onChange={handleChange}
             className="w-full px-4 py-3 rounded-lg bg-black/40"
           />
-          {errors.email && <p className="text-red-400 text-sm">{errors.email}</p>}
+          {errors.email && <p className="text-red-400">{errors.email.message}</p>}
 
           {/* SEND OTP */}
           <button
             type="button"
             onClick={sendOTP}
+            disabled={sendingOtp}
             className="w-full bg-blue-500 py-2 rounded"
           >
-            Send OTP
+            {sendingOtp ? "Sending..." : "Send OTP"}
           </button>
 
           {/* OTP */}
-          <input
-            type="text"
-            name="otp"
-            placeholder="Enter OTP"
-            onChange={handleChange}
-            className="w-full px-4 py-3 rounded-lg bg-black/40"
-          />
-          {errors.otp && <p className="text-red-400 text-sm">{errors.otp}</p>}
+          {otpSent && (
+            <>
+              <input
+                {...register("otp", { required: "OTP is required" })}
+                placeholder="Enter OTP"
+                className="w-full px-4 py-3 rounded-lg bg-black/40"
+              />
 
-          {/* VERIFY OTP */}
-          <button
-            type="button"
-            onClick={verifyOTP}
-            className="w-full bg-green-500 py-2 rounded"
-          >
-            Verify OTP
-          </button>
+              {errors.otp && (
+                <p className="text-red-400">{errors.otp.message}</p>
+              )}
+
+              <button
+                type="button"
+                onClick={verifyOTP}
+                disabled={verifyingOtp || otpVerified}
+                className="w-full bg-green-500 py-2 rounded"
+              >
+                {verifyingOtp
+                  ? "Verifying..."
+                  : otpVerified
+                  ? "Verified ✓"
+                  : "Verify OTP"}
+              </button>
+            </>
+          )}
 
           {/* PASSWORD */}
           <div className="relative">
             <input
+              {...register("password", {
+                required: "Password required",
+                minLength: {
+                  value: 8,
+                  message: "Password must be at least 8 characters"
+                }
+              })}
               type={showPassword ? "text" : "password"}
-              name="password"
               placeholder="Password"
-              onChange={handleChange}
               className="w-full px-4 py-3 rounded-lg bg-black/40"
             />
 
@@ -208,15 +221,16 @@ export default function Register() {
           </div>
 
           {errors.password && (
-            <p className="text-red-400 text-sm">{errors.password}</p>
+            <p className="text-red-400">{errors.password.message}</p>
           )}
 
           {/* REGISTER */}
           <button
             type="submit"
+            disabled={registering}
             className="w-full bg-indigo-500 py-3 rounded-lg"
           >
-            Register
+            {registering ? "Registering..." : "Register"}
           </button>
 
           <p className="text-center text-sm">
@@ -225,7 +239,9 @@ export default function Register() {
           </p>
 
         </form>
+
       </motion.div>
+
     </div>
   );
 }

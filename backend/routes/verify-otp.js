@@ -8,7 +8,6 @@ router.post("/verify-otp", async (req, res) => {
   try {
      const db = await connectDB();
     const { email, otp } = req.body;
-
     const otpCollection = db.collection("otp");
 
     const record = await otpCollection.findOne({ email });
