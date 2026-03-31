@@ -3,6 +3,7 @@ import { Routes, Route} from "react-router-dom";
 import Login from "./Login";
 import Register from "./components/Register";
 import ForgotPassword from "./components/Forgot-password";
+import ResetPassword from "./components/ResetPassword"
 
 
 export default function Home() {

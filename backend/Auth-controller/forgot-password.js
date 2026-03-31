@@ -27,7 +27,6 @@ router.post("/forgot-password", async (req, res) =>{
       { email },
       {
         $set: {
-          resetToken,
           resetTokenExpiry: expiry,
         },
       }
