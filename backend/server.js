@@ -59,11 +59,11 @@ app.use(update_password);
 
 // ------------------ REACT (VITE BUILD) ------------------
 
-// Serve static files from Frontend/dist
+// Serve React (Vite build)
 app.use(express.static(path.join(__dirname, "../Frontend/dist")));
 
-// Catch-all route (Express 5 compatible)
-app.get("/*", (req, res) => {
+// ✅ FIXED catch-all route (Express 5 safe)
+app.get(/.*/, (req, res) => {
   res.sendFile(path.resolve(__dirname, "../Frontend/dist", "index.html"));
 });
 
