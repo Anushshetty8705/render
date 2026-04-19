@@ -3,14 +3,13 @@ import { Chrome, Github } from "lucide-react";
 
 const SocialLogin = () => {
   const handleGoogle = () => {
-    console.log("Connecting to Google Auth...");
-    // Add your Google logic here
+       window.open("http://localhost:3000/auth/google", "_self");
   };
 
   const handleGithub = () => {
-    console.log("Connecting to GitHub Auth...");
-    // Add your GitHub logic here
+    window.open("http://localhost:3000/auth/github", "_self");
   };
+  
 
   return (
     <div className="w-full  space-y-3">
@@ -28,7 +27,7 @@ const SocialLogin = () => {
         className="w-full bg-slate-800/40 border border-white/5 py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-3 hover:bg-slate-800 hover:border-indigo-500/30 transition-all active:scale-95 group cursor-pointer"
       >
         <Chrome size={18} className="group-hover:text-indigo-400 transition-colors" />
-        <span className="text-slate-200">Continue with Google</span>
+        <span className="text-slate-200"  >Continue with Google</span>
       </button>
 
       {/* GitHub Button */}
@@ -38,7 +37,7 @@ const SocialLogin = () => {
         className="w-full bg-slate-800/40 border border-white/5 py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-3 hover:bg-slate-800 hover:border-indigo-500/30 transition-all active:scale-95 group cursor-pointer"
       >
         <Github size={18} className="group-hover:text-white transition-colors" />
-        <span className="text-slate-200">Continue with GitHub</span>
+        <span className="text-slate-200" >Continue with GitHub</span>
       </button>
     </div>
   );
