@@ -2,7 +2,7 @@
   "name": "mern-app",
   "version": "1.0.0",
   "scripts": {
-    "build": "cd client && npm install && npm run build",
-    "start": "cd server && npm install && node index.js"
+    "build": "cd Frontend && npm install && npm run build",
+    "start": "cd backend && npm install && node index.js"
   }
 }
